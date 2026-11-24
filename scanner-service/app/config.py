@@ -1,25 +1,30 @@
 import os
+from dotenv import load_dotenv
+
+
 import boto3
 
-from dotenv import load_dotenv
+def get_aws_client(service_name: str, region_name: str = None):
+    return boto3.client(service_name, region_name=region_name)
+
 
 load_dotenv()
 
-
 AWS_REGION = os.getenv(
-    "AWS_DEFAULT_REGION",
+    "AWS_REGION",
     "ap-south-1"
 )
 
-AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+AWS_PROFILE = os.getenv(
+    "AWS_PROFILE",
+    "finops-dev"
+)
 
+AWS_ENDPOINT_URL = os.getenv(
+    "AWS_ENDPOINT_URL"
+)
 
-def get_aws_client(service_name: str):
-
-    return boto3.client(
-        service_name,
-        region_name=AWS_REGION,
-        endpoint_url=AWS_ENDPOINT_URL or None,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
-    )
+AWS_CONNECTION_MODE = os.getenv(
+    "AWS_CONNECTION_MODE",
+    "local"
+)

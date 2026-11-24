@@ -33,7 +33,9 @@ async def start_scan(
     scan_id = scan.data[0]["id"]
 
     try:
-        result = await run_full_scan()
+        result = await run_full_scan(
+    connection_type=account.get("connection_type")
+)
 
         snapshots = []
         for resource in result["resources"]:

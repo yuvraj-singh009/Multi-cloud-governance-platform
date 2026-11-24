@@ -22,3 +22,47 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Secrets and credentials
+.aws/
+*.pem
+*.key
+
+# Generated files
+reports/
+*.pdf
+*.csv

@@ -120,7 +120,9 @@ def audit_scan(scan_id):
 
             "description": violation["description"],
 
-            "estimated_monthly_waste": waste
+            "estimated_monthly_waste": waste,
+
+            "resource_id": finding["resource_id"]
 
         })
 

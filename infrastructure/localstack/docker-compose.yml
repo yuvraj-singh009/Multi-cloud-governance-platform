@@ -1,4 +1,3 @@
-
 services:
   localstack:
     image: localstack/localstack:latest
@@ -9,7 +8,8 @@ services:
       - "127.0.0.1:4566:4566"
 
     environment:
-      SERVICES: s3,ec2,rds,iam,sts,cloudwatch
+      # Removed SERVICES restriction so all AWS services are enabled for your scanner
+      EAGER_SERVICE_LOADING: "1"
 
       AWS_DEFAULT_REGION: ap-south-1
 

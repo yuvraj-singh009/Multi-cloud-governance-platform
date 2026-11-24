@@ -5,6 +5,9 @@ from app.api.scan import router as scan_router
 from app.api.resources import router as resource_router
 
 
+
+
+
 app = FastAPI(
     title="Cloud Governance Platform",
     description="Cloud resource discovery and governance API",
@@ -39,6 +42,8 @@ def health():
         "service": "scanner-service",
         "status": "healthy"
     }
+
+
 
 
 app.include_router(scan_router)
