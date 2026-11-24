@@ -22,6 +22,10 @@ jobs:
     name: FastAPI Scanner Tests
     runs-on: ubuntu-latest
 
+    env:
+     SUPABASE_URL: https://example.supabase.co
+     SUPABASE_SECRET_KEY: ci-test-placeholder-key
+
     defaults:
       run:
         working-directory: scanner-service
