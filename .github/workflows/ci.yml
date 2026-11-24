@@ -43,7 +43,7 @@ jobs:
 
       - name: Run scanner tests
         run: |
-          pytest -v --cov=app tests/
+          python -m pytest -v --cov=app tests/
 
   auditor-tests:
     name: Flask Auditor Tests
