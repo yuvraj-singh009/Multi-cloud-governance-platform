@@ -1,4 +1,5 @@
 """Customer AWS onboarding using cross-account IAM roles."""
+import logging
 import os, re, secrets
 from datetime import datetime, timezone
 from uuid import UUID
@@ -10,6 +11,7 @@ from app.database import get_supabase
 from app.services.aws_session import verify_customer_role
 
 router = APIRouter(prefix="/api/v1/aws/connections", tags=["AWS Connections"])
+logger = logging.getLogger(__name__)
 ACCOUNT_ID_RE = re.compile(r"^\d{12}$")
 ROLE_ARN_RE = re.compile(r"^arn:aws:iam::(\d{12}):role/[A-Za-z0-9+=,.@_/-]{1,512}$")
 
@@ -52,7 +54,14 @@ def create_connection(payload: CreateConnection, user=Depends(get_current_user))
             "connection_status": "pending", "external_id_encrypted": encrypted,
         }).execute()
     except Exception as exc:
-        raise HTTPException(status_code=400, detail="Could not create connection. Apply the database migration and retry.") from exc
+        # Keep database details out of the API response, but preserve the full
+        # PostgREST error in Render logs so schema, constraint, and RLS failures
+        # can be diagnosed accurately.
+        logger.exception("Failed to insert AWS cross-account connection for user %s", user.id)
+        raise HTTPException(
+            status_code=400,
+            detail="Could not create AWS connection. Check Scanner Service logs for the database error."
+        ) from exc
     account = result.data[0]
     return {"connection_id": account["id"], "external_id": external_id,
             "account_id": payload.account_id, "status": "pending",
