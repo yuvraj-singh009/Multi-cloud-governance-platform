@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Read-only cross-account role for Cloud Governance Platform. Deploy in the CUSTOMER AWS account.
+Parameters:
+  PlatformPrincipalArn:
+    Type: String
+    Description: Exact IAM user or role ARN used by the platform backend.
+    AllowedPattern: '^arn:aws:iam::[0-9]{12}:(user|role)/[A-Za-z0-9+=,.@_/-]+$'
+  ExternalId:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    MaxLength: 128
+Resources:
+  CloudGovernanceReadOnlyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CloudGovernanceReadOnlyRole
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref PlatformPrincipalArn
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
+      Policies:
+        - PolicyName: CloudGovernanceReadOnlyDiscovery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ec2:Describe*, rds:Describe*, s3:ListAllMyBuckets, s3:GetBucketLocation, s3:GetBucketPolicy, s3:GetBucketPublicAccessBlock, s3:GetBucketAcl]
+                Resource: '*'
+Outputs:
+  RoleArn:
+    Value: !GetAtt CloudGovernanceReadOnlyRole.Arn
+    Description: Submit this ARN in the platform.
