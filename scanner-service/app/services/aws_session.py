@@ -4,7 +4,7 @@ import boto3
 from botocore.config import Config
 from app.config import AWS_PROFILE, AWS_REGION, AWS_ENDPOINT_URL, AWS_CONNECTION_MODE
 
-ROLE_ARN_RE = re.compile(r"^arn:aws:iam::(?P<account>\\d{12}):role\\/(?P<role>[A-Za-z0-9+=,.@_/-]{1,512})$")
+ROLE_ARN_RE = re.compile(r"^arn:aws:iam::(?P<account>\d{12}):role/(?P<role>[A-Za-z0-9+=,.@_/-]{1,512})$")
 
 def get_aws_session():
     mode = AWS_CONNECTION_MODE.lower()
