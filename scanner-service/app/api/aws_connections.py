@@ -10,19 +10,23 @@ from app.database import get_supabase
 from app.services.aws_session import verify_customer_role
 
 router = APIRouter(prefix="/api/v1/aws/connections", tags=["AWS Connections"])
-ACCOUNT_ID_RE = re.compile(r"^\\d{12}$")
-ROLE_ARN_RE = re.compile(r"^arn:aws:iam::(\\d{12}):role\\/[A-Za-z0-9+=,.@_/-]{1,512}$")
+ACCOUNT_ID_RE = re.compile(r"^\d{12}$")
+ROLE_ARN_RE = re.compile(r"^arn:aws:iam::(\d{12}):role/[A-Za-z0-9+=,.@_/-]{1,512}$")
 
 def _fernet():
     key = os.getenv("CONNECTION_ENCRYPTION_KEY")
     if not key:
         raise HTTPException(status_code=503, detail="AWS connection encryption is not configured")
-    try: return Fernet(key.encode())
-    except Exception as exc: raise HTTPException(status_code=503, detail="AWS connection encryption key is invalid") from exc
+    try:
+        return Fernet(key.encode())
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="AWS connection encryption key is invalid") from exc
 
 def _decrypt(value):
-    try: return _fernet().decrypt(value.encode()).decode()
-    except (InvalidToken, ValueError) as exc: raise HTTPException(status_code=500, detail="Stored AWS connection cannot be decrypted") from exc
+    try:
+        return _fernet().decrypt(value.encode()).decode()
+    except (InvalidToken, ValueError) as exc:
+        raise HTTPException(status_code=500, detail="Stored AWS connection cannot be decrypted") from exc
 
 class CreateConnection(BaseModel):
     account_name: str = Field(min_length=2, max_length=80)
@@ -65,7 +69,8 @@ def verify_connection(connection_id: UUID, payload: VerifyConnection, user=Depen
     if not account.get("external_id_encrypted"):
         raise HTTPException(status_code=409, detail="External ID is missing. Create a new connection.")
     external_id = _decrypt(account["external_id_encrypted"])
-    try: identity = verify_customer_role(payload.role_arn, external_id, account["account_identifier"])
+    try:
+        identity = verify_customer_role(payload.role_arn, external_id, account["account_identifier"])
     except Exception as exc:
         raise HTTPException(status_code=400, detail="AWS role verification failed. Check role trust, External ID, platform AssumeRole permission and role permissions.") from exc
     get_supabase().table("cloud_accounts").update({
