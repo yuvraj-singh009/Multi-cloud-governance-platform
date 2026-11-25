@@ -83,7 +83,9 @@ def verify_connection(connection_id: UUID, payload: VerifyConnection, user=Depen
 def list_connections(user=Depends(get_current_user)):
     result = get_supabase().table("cloud_accounts").select(
         "id,account_name,provider,account_identifier,region,connection_type,connection_status,verified_at,created_at"
-    ).eq("user_id", str(user.id)).order("created_at", desc=True).execute()
+    ).eq("user_id", str(user.id)).eq(
+        "connection_type", "aws_assume_role"
+    ).order("created_at", desc=True).execute()
     return {"connections": result.data or []}
 
 @router.delete("/{connection_id}")
