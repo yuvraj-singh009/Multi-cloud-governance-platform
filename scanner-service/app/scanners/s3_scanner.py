@@ -1,69 +1,43 @@
+import json
 from botocore.exceptions import ClientError
 
-from app.config import get_aws_client
 
-
-def scan_s3():
-
-    s3 = get_aws_client("s3")
-
-    response = s3.list_buckets()
-
+def scan_s3(session):
+    s3 = session.client("s3")
     resources = []
-
+    response = s3.list_buckets()
     for bucket in response.get("Buckets", []):
-
-        bucket_name = bucket["Name"]
-
+        name = bucket["Name"]
+        location = s3.get_bucket_location(Bucket=name).get("LocationConstraint") or "us-east-1"
+        if location == "EU":
+            location = "eu-west-1"
         policy = None
+        policy_status = None
         public_access_block = None
-
+        acl = None
         try:
-            result = s3.get_bucket_policy(
-                Bucket=bucket_name
-            )
-
-            import json
-
-            policy = json.loads(result["Policy"])
-
-        except ClientError:
-            policy = None
-
+            policy = json.loads(s3.get_bucket_policy(Bucket=name)["Policy"])
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") not in ("NoSuchBucketPolicy", "AccessDenied"):
+                raise
         try:
-            result = s3.get_public_access_block(
-                Bucket=bucket_name
-            )
-
-            public_access_block = result.get(
-                "PublicAccessBlockConfiguration"
-            )
-
+            policy_status = s3.get_bucket_policy_status(Bucket=name).get("PolicyStatus", {})
         except ClientError:
-            public_access_block = None
-
+            pass
+        try:
+            public_access_block = s3.get_public_access_block(Bucket=name).get("PublicAccessBlockConfiguration")
+        except ClientError:
+            pass
+        try:
+            acl = s3.get_bucket_acl(Bucket=name).get("Grants", [])
+        except ClientError:
+            pass
         resources.append({
-
-            "resource_id": bucket_name,
-
-            "resource_type": "S3",
-
-            "resource_name": bucket_name,
-
-            "region": "ap-south-1",
-
-            "resource_state": "available",
-
+            "resource_id": name, "resource_type": "S3", "resource_name": name,
+            "region": location, "resource_state": "available",
             "configuration": {
-
-                "bucket_name": bucket_name,
-
-                "policy": policy,
-
-                "public_access_block": public_access_block
-
+                "bucket_name": name, "policy": policy, "policy_status": policy_status,
+                "public_access_block": public_access_block, "acl": acl
             }
-
         })
-
     return resources
