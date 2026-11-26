@@ -9,43 +9,64 @@ const api = axios.create({
     }
 });
 
+function authConfig(accessToken) {
+    return {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    };
+}
 
-export async function startCloudScan(
-    accountId,
-    accessToken
-) {
-
+export async function startCloudScan(accountId, accessToken) {
     const response = await api.post(
         `/api/v1/scans/${accountId}`,
         {},
-        {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        }
+        authConfig(accessToken)
     );
-
     return response.data;
 }
 
-
-export async function getResources(
-    accountId,
-    accessToken
-) {
-
+export async function getResources(accountId, accessToken) {
     const response = await api.get(
         "/api/v1/resources/",
         {
-            params: {
-                account_id: accountId
-            },
-
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
+            params: { account_id: accountId },
+            ...authConfig(accessToken)
         }
     );
-
     return response.data.resources;
+}
+
+export async function listAwsConnections(accessToken) {
+    const response = await api.get(
+        "/api/v1/aws/connections",
+        authConfig(accessToken)
+    );
+    return response.data.connections || [];
+}
+
+export async function createAwsConnection(payload, accessToken) {
+    const response = await api.post(
+        "/api/v1/aws/connections",
+        payload,
+        authConfig(accessToken)
+    );
+    return response.data;
+}
+
+export async function verifyAwsConnection(connectionId, roleArn, accessToken) {
+    const response = await api.post(
+        `/api/v1/aws/connections/${connectionId}/verify`,
+        { role_arn: roleArn },
+        authConfig(accessToken)
+    );
+    return response.data;
+}
+
+export async function disconnectAwsConnection(connectionId, accessToken) {
+    const response = await api.delete(
+        `/api/v1/aws/connections/${connectionId}`,
+        authConfig(accessToken)
+    );
+    return response.data;
 }
